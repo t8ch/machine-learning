@@ -1,0 +1,12 @@
+random_method,uniform_mersenne
+reduction_method,
+reduction_interval,50
+reduction_window,20
+grid_downsample,
+reduction_threshold,0.2
+reduction_metric,val_acc
+reduce_loss,False
+experiment_name,red-wine_
+complete_time,01/18/19/12:03
+x_shape,"(1087, 11)"
+y_shape,"(1087, 9)"
