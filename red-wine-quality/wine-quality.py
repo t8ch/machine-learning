@@ -12,38 +12,50 @@
 #     name: python3
 # ---
 
+# + {"heading_collapsed": true, "cell_type": "markdown"}
 # # imports
 
+# + {"hidden": true}
 # %pylab
 import seaborn as sns
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, r2_score
 
+# + {"hidden": true}
 # %ls
 
+# + {"hidden": true}
 wine_data = pd.read_csv('winequality-red.csv')
 wine_data.info()
 
+# + {"heading_collapsed": true, "cell_type": "markdown"}
 # # basic data inspection
 
+# + {"hidden": true}
 wine_data.describe()
 
+# + {"hidden": true}
 wine_data.head()
 
+# + {"hidden": true, "cell_type": "markdown"}
 # chance level ~42%, highly unbalanced data!
 
+# + {"hidden": true}
 figure()
 sns.barplot(x=wine_data['quality'], y=wine_data['quality'],  estimator=lambda i: len(i) / float(len(wine_data['quality'])) * 100)
 ylabel("Percent")
 show()
 
+# + {"hidden": true}
 sns.pairplot(wine_data)
 
+# + {"hidden": true}
 f, ax = subplots(figsize=(15, 12))
 corr = wine_data.corr()
 sns.heatmap(corr, mask=np.zeros_like(corr, dtype=np.bool), cmap=sns.diverging_palette(220, 10, as_cmap=True), annot = True,
             square=True, ax=ax)
 
+# + {"hidden": true, "cell_type": "markdown"}
 # look who's significantly *positively* correlated with quality!
 
 # + {"heading_collapsed": true, "cell_type": "markdown"}
@@ -138,26 +150,34 @@ print('R^2 on test data: ', r2_score(y_test, predicted_test))
 
 # # decision trees
 
+# + {"heading_collapsed": true, "cell_type": "markdown"}
 # ## simple tree
 
+# + {"hidden": true}
 from sklearn import tree
 import graphviz
 from sklearn import tree
 
+# + {"hidden": true}
 clf = tree.DecisionTreeClassifier()
 clf = clf.fit(X_train, y_train)
 
+# + {"hidden": true}
 predicted_test = clf.predict(X_test)
 predicted_train = clf.predict(X_train)
 
+# + {"hidden": true}
 print("accuracy on test data: " ,clf.score(X_test, y_test))
 print('R^2 on test data: ', r2_score(y_test, predicted_test))
 
+# + {"hidden": true, "cell_type": "markdown"}
 # **feature importances**
 
+# + {"hidden": true}
 feature_importance = pd.Series(clf.feature_importances_, wine_data.columns[:-1])
 feature_importance.sort_values(ascending=False)
 
+# + {"hidden": true}
 f, ax = subplots(1, 2, figsize=(11, 6))
 ax = subplot(121)
 scatter(y_test, predicted)
@@ -170,14 +190,18 @@ ax.set_title('training data')
 tight_layout()
 show()
 
+# + {"hidden": true, "cell_type": "markdown"}
 # that's what we call overfitting
 
+# + {"hidden": true, "cell_type": "markdown"}
 # ### plot the tree
 
+# + {"hidden": true}
 dot_data = tree.export_graphviz(clf, out_file=None) 
 graph = graphviz.Source(dot_data) 
 graph.render("red-wine-tree") 
 
+# + {"hidden": true}
 dot_data = tree.export_graphviz(clf, out_file=None, 
                      feature_names= ['fixed acidity', 'volatile acidity', 'citric acid', 'residual sugar','chlorides', 'free sulfur dioxide', 'total sulfur dioxide', 'density','pH', 'sulphates', 'alcohol'],  
                      class_names= None,  
@@ -187,8 +211,10 @@ graph = graphviz.Source(dot_data)
 graph.render("red-wine-tree") 
 graph 
 
+# + {"hidden": true, "cell_type": "markdown"}
 # ### changing depth
 
+# + {"hidden": true}
 score_test, score_train = [], []
 for d in range(1,22):
     clf = tree.DecisionTreeClassifier(max_depth=d)
@@ -206,6 +232,7 @@ show()
 #     print('max depth: ', d)
 #     print("accuracy on test data: " ,clf.score(X_test, y_test))
 #     print('$R^2$ on test data: ', r2_score(y_test, predicted_test))
+# -
 
 # ## random forest
 
@@ -434,27 +461,19 @@ xlabel('predicted'), ylabel('true')
 
 # + {"hidden": true, "cell_type": "markdown"}
 # "regression to the mean"; problem with unbalanced data
+# -
 
-# + {"heading_collapsed": true, "cell_type": "markdown"}
 # ## hyperparameter optimization
-
-# + {"hidden": true}
-from hyperopt import Trials, STATUS_OK, tpe
-from hyperas import optim
-from hyperas.distributions import uniform, choice
 
 import talos
 from talos.model.early_stopper import early_stopper
 from talos.model.normalizers import lr_normalizer
 
-# + {"hidden": true}
 from keras.activations import relu, sigmoid, linear
 from keras.optimizers import Adam
 
-# + {"hidden": true, "cell_type": "markdown"}
 # scan parameter dictionary
 
-# + {"hidden": true}
 p = {}
 p['first_neuron'] = [8,16,32]
 p['second_neuron'] = [4,8,16]
@@ -463,16 +482,12 @@ p['activations2'] = [relu, sigmoid, linear]
 p['dropouts'] = (0., .5, 3)
 p['lr'] = (0.1,10, 7) #learning rate, wrapped by lr_normalizer
 
-# + {"hidden": true}
 p
 
-# + {"hidden": true, "cell_type": "markdown"}
 # stratified validation set for all scans
 
-# + {"hidden": true}
 X_train_dnn, X_val_dnn, y_train_dnn, y_val_dnn = train_test_split(X_train_dnn, y_train_dnn, test_size=0.15, random_state=42, stratify = y_train_dnn)
 
-# + {"hidden": true}
 def optimizable_model(X_train_dnn, y_train_dnn, X_val_dnn, y_val_dnn, p):
     model = keras.Sequential()
     # Adds a densely-connected layer with 64 units to the model:
@@ -493,77 +508,59 @@ def optimizable_model(X_train_dnn, y_train_dnn, X_val_dnn, y_val_dnn, p):
     
     return learning, model
 
-# + {"hidden": true}
 early_stopper??
 
-# + {"hidden": true}
+# +
 # test basic functionality of network design
 #optimizable_model(X_train_dnn, y_train_dnn, X_val_dnn, y_val_dnn, {"first_neuron": 2, 'activations1':relu, 'activations2':relu, 'second_neuron': 2, 'dropouts' : 0, 'lr': 1})
+# -
 
-# + {"hidden": true}
 t= talos.Scan(x = X_train_dnn, y = y_train_dnn, x_val = X_val_dnn, y_val = y_val_dnn, params = p, model = optimizable_model, dataset_name='red-wine')
 
-# + {"hidden": true}
 t.data.sort_values('val_acc', ascending = 0).head(7)
 
-# + {"hidden": true}
 t.details
 
-# + {"hidden": true, "cell_type": "markdown"}
 # from saved file ("red-wine_.csv")
 
-# + {"hidden": true}
 r = talos.Reporting("red-wine_.csv")
 
-# + {"hidden": true}
 data = r.data
 acc = pd.to_numeric(data['val_acc'])
 
-# + {"hidden": true}
 figure()
 xlabel("round")
 ylabel("val_acc")
 acc.plot()
 show()
 
-# + {"hidden": true}
 r.best_params(n=10)
 
-# + {"hidden": true}
 r.correlate("val_acc"), r.correlate("acc")
 
-# + {"hidden": true, "cell_type": "markdown"}
 # I don't think these numbers are very informative b/c I'd expect a highly non-linear (possibly non-convex) relation
 
-# + {"hidden": true}
 r.plot_corr(['val_acc'])
 tight_layout()
 show()
 
-# + {"hidden": true}
 r.plot_kde('val_acc')
 show()
 
-# + {"hidden": true, "cell_type": "markdown"}
 # does this imply a local maximum with small fluctuations around that?
 
-# + {"hidden": true, "cell_type": "markdown"}
 # **save best model and restore**
 
-# + {"hidden": true}
 talos.Deploy(t, 'red-wine-best-dnn')
 
-# + {"hidden": true}
 wine_dnn = talos.Restore('red-wine-best-dnn.zip')
 
-# + {"hidden": true, "cell_type": "markdown"}
 # test data accuracy
 
-# + {"hidden": true}
 dnn_predict = wine_dnn.model.predict(X_test_dnn)
 print(accuracy_score(argmax(dnn_predict, axis = 1), y_test))
 
-# + {"heading_collapsed": true, "hidden": true, "cell_type": "markdown"}
+# + {"heading_collapsed": true, "cell_type": "markdown"}
 # ### hyperas (old)
 
 # + {"hidden": true}
@@ -608,8 +605,14 @@ best_run, best_model = optim.minimize(model=optimizable_model,
 
 # # "Ensembles"
 
+# +
 from sklearn.model_selection import StratifiedKFold
-from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
+from joblib import dump, load
+
+from hyperopt import Trials, STATUS_OK, tpe, space_eval, hp, fmin
+#from hyperas import optim
+#from hyperas.distributions import uniform, choice
+# -
 
 # has to be run again because validation data generated in "hyperparameter optimization"
 X_train_dnn, y_train_dnn, X_test_dnn, y_test_dnn = array(X_train), to_categorical(y_train), array(X_test), to_categorical(y_test)
@@ -620,7 +623,7 @@ skf = StratifiedKFold(n_splits=6, random_state=666, shuffle=True)
 splits = skf.split(X_train, y_train)
 
 for train_index, val_index in skf.split(X_train, y_train):
-   print("TRAIN:", train_index, "TEST:", test_index)
+   print("TRAIN:", train_index, "TEST:", val_index)
    X2_train, X2_val = array(X_train)[train_index], array(X_train)[val_index]
    y2_train, y2_val = y_train[train_index], y_train[val_index]
 
@@ -640,28 +643,102 @@ def evaluate_forest(params):
     acc_mean, acc_var = mean(acc), var(acc)
     return {'loss': -acc_mean, 'loss_variance': acc_var,'status': STATUS_OK}
 
+search_space = {'n_estimators':hp.choice('n_estimators', range(2,100,10)), 'max_depth': hp.choice('max_depth', range(1,100,10)),
+            'criterion': hp.choice('criterion', ["gini", "entropy"]), 'max_features': hp.choice('max_features', range(1,11))}
+
 trials = Trials()
 best = fmin(fn=evaluate_forest,
-    space={'n_estimators':hp.choice('n_estimators', range(2,100,10)), 'max_depth': hp.choice('max_depth', range(1,100,10)),
-            'criterion': hp.choice('criterion', ["gini", "entropy"]), 'max_features': hp.choice('max_features', range(1,11))},
+    space= search_space,
     algo=tpe.suggest,
     max_evals=30, trials = trials)
 
 trials.results
 
-trials.vals, trials.best_trial
+#print(trials.vals)
+print(trials.best_trial)
+print(best)
 
-best
+best_forest_params = space_eval(search_space, best)
 
-# https://github.com/fmfn/BayesianOptimization
+# train and evaluate best random forest
 
-from bayes_opt import BayesianOptimization
+best_forest = RandomForestClassifier(**best_forest_params)
+best_forest.fit(X_train, y_train)
+
+predicted_test = best_forest.predict(X_test)
+print("accuracy on test data: " , best_forest.score(X_test, y_test))
+print(r'R^2 on test data: ', r2_score(y_test, predicted_test))
+
+# ## combining random forest and DNN
+
+# I use the hyperparameter-optimized DNN from above. ideally, optimization would also be based on k-fold CV but this is too time-expensive here. 
+
+best_forest = RandomForestClassifier(**best)
+best_forest
+
+ #model has not been saved explicitely, only parameters
+best_dnn = talos.Restore('red-wine-best-dnn.zip').model
+
+X_train_dnn, y_train_dnn, X_test_dnn, y_test_dnn = array(X_train), to_categorical(y_train), array(X_test), to_categorical(y_test)
+
+# outputs (class predictions) of forest and DNN are inputs of ensemble network
+
+pred_train_forest, pred_train_dnn = best_forest.predict_proba(X_train), best_dnn.predict(X_train_dnn)
+pred_test_forest, pred_test_dnn = best_forest.predict_proba(X_test), best_dnn.predict(X_test_dnn)
+predicted_input_train, predicted_input_test = concatenate((pred_train_forest, pred_train_dnn), axis =1), concatenate((pred_test_forest, pred_test_dnn), axis =1)
+
+def evaluate_ensemble(params):
+    p = params
+    acc = array([])
+    for train_index, val_index in skf.split(X_train, y_train):
+        model = keras.Sequential()
+        # Adds a densely-connected layer with 64 units to the model:
+        model.add(keras.layers.Dense(p['first_neuron'], activation=p['activations1'], input_shape = predicted_input_test.shape[1:]))
+        model.add(keras.layers.Dropout(p['dropouts']))
+    #     # Add another:
+        model.add(keras.layers.Dense(p['second_neuron'], activation=p['activations2']))
+        model.add(keras.layers.Dropout(p['dropouts']))
+    #     # Add a softmax layer with 10 output units:
+        model.add(keras.layers.Dense(9, activation='softmax'))
+
+        model.compile(optimizer=Adam(lr_normalizer(p['lr'], Adam)),
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+
+        learning = model.fit(array(predicted_input_train)[train_index], array(y_train_dnn)[train_index], epochs = 150, validation_split= .15, callbacks=early_stopper(monitor = 'val_loss', epochs = 150, patience=3, mode='moderate'), verbose = 0)
+        
+        print(model.metrics_names)
+        acc = append(acc,model.evaluate(array(predicted_input_train)[val_index], array(y_train_dnn)[val_index])[0])
+    acc_mean, acc_var = mean(acc), var(acc)
+    return {'loss': -acc_mean, 'loss_variance': acc_var,'status': STATUS_OK, 'model': model}
+
+search_space_ensemble = {'first_neuron':hp.choice('first_neuron', [8,16,32]), 'second_neuron':hp.choice('second_neuron', [4,8,16]), 'activations1':hp.choice('activations1', [relu, sigmoid, linear]), 'activations2':hp.choice('activations2', [relu, sigmoid, linear]), 'dropouts':hp.choice('dropouts', linspace(0., .5, 3)), 'lr':hp.choice('lr', linspace(0.1,10, 7))}
+
+# %%time
+trials_ensemble = Trials()
+best_ensemble = fmin(fn=evaluate_ensemble,
+    space= search_space_ensemble,
+    algo=tpe.suggest,
+    max_evals=10, trials = trials_ensemble)
+
+print(trials_ensemble.best_trial)
+print(best_ensemble)
+
+best_ensemble_params = space_eval(search_space_ensemble, best_ensemble)
+print(best_ensemble_params)
+
+best_ensemble_model = trials_ensemble.best_trial['result']['model']
+
+predicted_test = best_ensemble_model.predict(predicted_input_test)
+print("accuracy on test data: " , accuracy_score(argmax(predicted_test, axis = 1), y_test))
 
 # # notes
 
 # - unbalanced data; alternative scores
+# - add info to random forests and ensembles
 # - list of scores of all methods
 # - stratified k-fold
+# - L1 feature importance
 # - hyperparameter opt (incl dropout)
 # - ensemble inc neural networks
 # - widgets
